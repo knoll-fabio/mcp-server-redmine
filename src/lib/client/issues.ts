@@ -73,6 +73,7 @@ export class IssuesClient extends BaseClient {
     }
 
     const query = params ? this.encodeQueryParams(params) : "";
+    console.log(`issues/${id}.json${query ? `?${query}` : ""}`);
     const response = await this.performRequest<{ issue: RedmineIssue }>(
       `issues/${id}.json${query ? `?${query}` : ""}`
     );
@@ -166,4 +167,3 @@ export class IssuesClient extends BaseClient {
     });
   }
 }
-

@@ -1,5 +1,5 @@
-import { Tool } from '@modelcontextprotocol/sdk/types.js';
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import { Tool } from "@modelcontextprotocol/sdk/types.js";
+import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import {
   HandlerContext,
   ToolResponse,
@@ -11,16 +11,18 @@ import * as formatters from "../formatters/index.js";
 import type {
   RedmineIssueCreate,
   IssueListParams,
+  IssueShowParams,
 } from "../lib/types/index.js";
-import { 
-  ISSUE_LIST_TOOL, 
-  ISSUE_CREATE_TOOL, 
-  ISSUE_UPDATE_TOOL, 
-  ISSUE_DELETE_TOOL, 
-  ISSUE_ADD_WATCHER_TOOL, 
-  ISSUE_REMOVE_WATCHER_TOOL 
-} from '../tools/issues.js';
-import { IssueQuerySchema } from '../lib/types/issues/schema.js';
+import {
+  ISSUE_LIST_TOOL,
+  ISSUE_SHOW_TOOL,
+  ISSUE_CREATE_TOOL,
+  ISSUE_UPDATE_TOOL,
+  ISSUE_DELETE_TOOL,
+  ISSUE_ADD_WATCHER_TOOL,
+  ISSUE_REMOVE_WATCHER_TOOL,
+} from "../tools/issues.js";
+import { IssueQuerySchema } from "../lib/types/issues/schema.js";
 
 /**
  * Creates handlers for issue-related operations
@@ -37,7 +39,7 @@ export function createIssuesHandlers(context: HandlerContext) {
     list_issues: async (args: unknown): Promise<ToolResponse> => {
       try {
         // Validate input structure
-        if (typeof args !== 'object' || args === null) {
+        if (typeof args !== "object" || args === null) {
           throw new ValidationError("Arguments must be an object");
         }
 
@@ -52,15 +54,18 @@ export function createIssuesHandlers(context: HandlerContext) {
         };
 
         // Add optional parameters with validation
-        if ('sort' in argsObj) params.sort = String(argsObj.sort);
-        if ('include' in argsObj) params.include = String(argsObj.include);
-        if ('project_id' in argsObj) params.project_id = asNumber(argsObj.project_id);
-        if ('issue_id' in argsObj) params.issue_id = asNumber(argsObj.issue_id);
-        if ('subproject_id' in argsObj) params.subproject_id = String(argsObj.subproject_id);
-        if ('tracker_id' in argsObj) params.tracker_id = asNumber(argsObj.tracker_id);
+        if ("sort" in argsObj) params.sort = String(argsObj.sort);
+        if ("include" in argsObj) params.include = String(argsObj.include);
+        if ("project_id" in argsObj)
+          params.project_id = asNumber(argsObj.project_id);
+        if ("issue_id" in argsObj) params.issue_id = asNumber(argsObj.issue_id);
+        if ("subproject_id" in argsObj)
+          params.subproject_id = String(argsObj.subproject_id);
+        if ("tracker_id" in argsObj)
+          params.tracker_id = asNumber(argsObj.tracker_id);
 
         // Handle status_id special values
-        if ('status_id' in argsObj) {
+        if ("status_id" in argsObj) {
           const statusId = String(argsObj.status_id);
           if (!["open", "closed", "*"].includes(statusId)) {
             params.status_id = asNumber(argsObj.status_id);
@@ -70,7 +75,7 @@ export function createIssuesHandlers(context: HandlerContext) {
         }
 
         // Handle assigned_to_id special value
-        if ('assigned_to_id' in argsObj) {
+        if ("assigned_to_id" in argsObj) {
           if (argsObj.assigned_to_id === "me") {
             params.assigned_to_id = "me";
           } else {
@@ -79,8 +84,10 @@ export function createIssuesHandlers(context: HandlerContext) {
         }
 
         // Handle date filters
-        if ('created_on' in argsObj) params.created_on = String(argsObj.created_on);
-        if ('updated_on' in argsObj) params.updated_on = String(argsObj.updated_on);
+        if ("created_on" in argsObj)
+          params.created_on = String(argsObj.created_on);
+        if ("updated_on" in argsObj)
+          params.updated_on = String(argsObj.updated_on);
 
         // Handle custom fields (cf_X parameters)
         for (const [key, value] of Object.entries(argsObj)) {
@@ -90,13 +97,13 @@ export function createIssuesHandlers(context: HandlerContext) {
         }
 
         const issues = await client.issues.getIssues(params);
-        
+
         return {
           content: [
             {
               type: "text",
               text: formatters.formatIssues(issues),
-            }
+            },
           ],
           isError: false,
         };
@@ -108,7 +115,59 @@ export function createIssuesHandlers(context: HandlerContext) {
             {
               type: "text",
               text: error instanceof Error ? error.message : String(error),
-            }
+            },
+          ],
+          isError: true,
+        };
+      }
+    },
+
+    /**
+     * Get a single issue by ID
+     */
+    show_issue: async (args: unknown): Promise<ToolResponse> => {
+      try {
+        // Validate input structure
+        if (typeof args !== "object" || args === null) {
+          throw new ValidationError("Arguments must be an object");
+        }
+
+        const argsObj = args as Record<string, unknown>;
+
+        // Validate required ID parameter
+        if (!("id" in argsObj)) {
+          throw new ValidationError("Issue ID is required");
+        }
+
+        const id = asNumber(argsObj.id);
+
+        // Create params object
+        const params: IssueShowParams = {};
+
+        // Add optional include parameter with validation
+        if ("include" in argsObj) {
+          params.include = String(argsObj.include);
+        }
+
+        // Call the client method
+        const response = await client.issues.getIssue(id, params);
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: formatters.formatIssue(response.issue),
+            },
+          ],
+          isError: false,
+        };
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: error instanceof Error ? error.message : String(error),
+            },
           ],
           isError: true,
         };

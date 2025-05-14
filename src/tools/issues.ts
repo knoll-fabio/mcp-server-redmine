@@ -93,6 +93,39 @@ export const ISSUE_LIST_TOOL: Tool = {
   },
 };
 
+// Show issue tool
+export const ISSUE_SHOW_TOOL: Tool = {
+  name: "show_issue",
+  description:
+    "Get detailed information about a specific issue by ID. " +
+    "Supports including additional related data. " +
+    "Available since Redmine 1.0",
+  inputSchema: {
+    type: "object",
+    properties: {
+      id: {
+        type: "number",
+        description: "Issue ID to retrieve",
+      },
+      include: {
+        type: "string",
+        description:
+          "Additional data to include as comma separated values\n" +
+          "- children: child issues\n" +
+          "- attachments: file attachments\n" +
+          "- relations: issue relations\n" +
+          "- changesets: associated changesets\n" +
+          "- journals: history entries\n" +
+          "- watchers: issue watchers\n" +
+          "- allowed_statuses: statuses available for this issue",
+        pattern:
+          "^(children|attachments|relations|changesets|journals|watchers|allowed_statuses)(,(children|attachments|relations|changesets|journals|watchers|allowed_statuses))*$",
+      },
+    },
+    required: ["id"],
+  },
+};
+
 // Create issue tool
 export const ISSUE_CREATE_TOOL: Tool = {
   name: "create_issue",
@@ -156,7 +189,8 @@ export const ISSUE_CREATE_TOOL: Tool = {
             },
             value: {
               type: "string",
-              description: "Value or list of values for the field as JSON string",
+              description:
+                "Value or list of values for the field as JSON string",
             },
           },
           required: ["id", "value"],
@@ -259,7 +293,8 @@ export const ISSUE_UPDATE_TOOL: Tool = {
             },
             value: {
               type: "string",
-              description: "New value or list of values for the field as JSON string",
+              description:
+                "New value or list of values for the field as JSON string",
             },
           },
           required: ["id", "value"],
