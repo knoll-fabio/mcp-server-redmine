@@ -13,6 +13,7 @@ import {
   validateListIssueIncludes,
   validateShowIssueIncludes,
 } from "../types/issues/schema.js";
+import { server } from "../../handlers/index.js";
 
 export class IssuesClient extends BaseClient {
   /**
@@ -73,10 +74,11 @@ export class IssuesClient extends BaseClient {
     }
 
     const query = params ? this.encodeQueryParams(params) : "";
-    console.log(`issues/${id}.json${query ? `?${query}` : ""}`);
-    const response = await this.performRequest<{ issue: RedmineIssue }>(
-      `issues/${id}.json${query ? `?${query}` : ""}`
-    );
+
+    const url = `issues/${id}.json${query ? `?${query}` : ""}`;
+
+    const response = await this.performRequest<{ issue: RedmineIssue }>(url);
+
     return {
       issue: RedmineIssueSchema.parse(response.issue),
     };

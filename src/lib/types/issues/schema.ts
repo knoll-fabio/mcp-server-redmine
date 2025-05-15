@@ -2,23 +2,23 @@ import { z } from "zod";
 
 // バリデーション関数
 export function validateListIssueIncludes(include: string): boolean {
-  const LIST_ISSUE_INCLUDES = ['attachments', 'relations'] as const;
-  const includes = include.split(',');
-  return includes.every(inc => LIST_ISSUE_INCLUDES.includes(inc as any));
+  const LIST_ISSUE_INCLUDES = ["attachments", "relations"] as const;
+  const includes = include.split(",");
+  return includes.every((inc) => LIST_ISSUE_INCLUDES.includes(inc as any));
 }
 
 export function validateShowIssueIncludes(include: string): boolean {
   const SHOW_ISSUE_INCLUDES = [
-    'children',
-    'attachments',
-    'relations',
-    'changesets',
-    'journals',
-    'watchers',
-    'allowed_statuses'
+    "children",
+    "attachments",
+    "relations",
+    "changesets",
+    "journals",
+    "watchers",
+    "allowed_statuses",
   ] as const;
-  const includes = include.split(',');
-  return includes.every(inc => SHOW_ISSUE_INCLUDES.includes(inc as any));
+  const includes = include.split(",");
+  return includes.every((inc) => SHOW_ISSUE_INCLUDES.includes(inc as any));
 }
 
 // 基本的なクエリパラメータのスキーマ
@@ -26,17 +26,22 @@ const baseQuerySchema = z.object({
   offset: z.number().int().min(0).optional(),
   limit: z.number().int().min(1).max(100).optional(),
   sort: z.string().optional(),
-  include: z.string().transform(str => str.split(",").filter(Boolean)).optional(),
+  include: z
+    .string()
+    .transform((str) => str.split(",").filter(Boolean))
+    .optional(),
   issue_id: z.union([z.number().int(), z.string()]).optional(),
   project_id: z.union([z.number().int(), z.string()]).optional(),
   subproject_id: z.string().optional(),
   tracker_id: z.number().int().optional(),
-  status_id: z.union([
-    z.literal("open"),
-    z.literal("closed"),
-    z.literal("*"),
-    z.number().int()
-  ]).optional(),
+  status_id: z
+    .union([
+      z.literal("open"),
+      z.literal("closed"),
+      z.literal("*"),
+      z.number().int(),
+    ])
+    .optional(),
   assigned_to_id: z.union([z.number().int(), z.literal("me")]).optional(),
   parent_id: z.number().int().optional(),
   created_on: z.string().optional(),
@@ -44,7 +49,9 @@ const baseQuerySchema = z.object({
 });
 
 // カスタムフィールドを含むクエリパラメータのスキーマ
-export const IssueQuerySchema = baseQuerySchema.catchall(z.union([z.string(), z.number()]));
+export const IssueQuerySchema = baseQuerySchema.catchall(
+  z.union([z.string(), z.number()])
+);
 
 const RedmineRelationSchema = z.object({
   id: z.number(),
@@ -52,6 +59,27 @@ const RedmineRelationSchema = z.object({
   issue_to_id: z.number(),
   relation_type: z.string(),
   delay: z.number().nullable(),
+});
+
+const RedmineJournalSchema = z.object({
+  id: z.number(),
+  user: z.object({
+    id: z.number(),
+    name: z.string(),
+  }),
+  notes: z.string().optional(),
+  created_on: z.string(),
+  private_notes: z.boolean().optional(),
+  details: z
+    .array(
+      z.object({
+        property: z.string(),
+        name: z.string(),
+        old_value: z.any().nullable(),
+        new_value: z.any().nullable(),
+      })
+    )
+    .optional(),
 });
 
 export const RedmineIssueSchema = z.object({
@@ -77,10 +105,12 @@ export const RedmineIssueSchema = z.object({
     id: z.number(),
     name: z.string(),
   }),
-  assigned_to: z.object({
-    id: z.number(),
-    name: z.string(),
-  }).optional(),
+  assigned_to: z
+    .object({
+      id: z.number(),
+      name: z.string(),
+    })
+    .optional(),
   subject: z.string(),
   description: z.string().optional(),
   start_date: z.string().optional(),
@@ -90,13 +120,15 @@ export const RedmineIssueSchema = z.object({
   spent_hours: z.number().optional(),
   total_estimated_hours: z.number().nullable(),
   total_spent_hours: z.number().optional(),
-  custom_fields: z.array(
-    z.object({
-      id: z.number(),
-      name: z.string(),
-      value: z.union([z.string(), z.array(z.string())]),
-    })
-  ).optional(),
+  custom_fields: z
+    .array(
+      z.object({
+        id: z.number(),
+        name: z.string(),
+        value: z.union([z.string(), z.array(z.string())]),
+      })
+    )
+    .optional(),
   created_on: z.string(),
   updated_on: z.string(),
   closed_on: z.string().nullable(),
@@ -105,7 +137,10 @@ export const RedmineIssueSchema = z.object({
   is_private: z.boolean().optional(),
   watcher_user_ids: z.array(z.number()).optional(),
   relations: z.array(RedmineRelationSchema).optional(),
-  parent: z.object({
-    id: z.number(),
-  }).optional(),
+  parent: z
+    .object({
+      id: z.number(),
+    })
+    .optional(),
+  journals: z.array(RedmineJournalSchema).optional(),
 });

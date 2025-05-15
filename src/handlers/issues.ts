@@ -23,6 +23,7 @@ import {
   ISSUE_REMOVE_WATCHER_TOOL,
 } from "../tools/issues.js";
 import { IssueQuerySchema } from "../lib/types/issues/schema.js";
+import { server } from "./index.js";
 
 /**
  * Creates handlers for issue-related operations
